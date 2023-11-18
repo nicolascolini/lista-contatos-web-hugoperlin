@@ -1,6 +1,12 @@
 package ifpr.pgua.eic.tads.contatos.model;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+
 
 public class Agenda {
     private ArrayList<Contato> lista;
@@ -11,6 +17,28 @@ public class Agenda {
     }
 
     public ArrayList<Contato> getLista(){
+        lista.clear();
+        try{
+            Connection con = DriverManager.getConnection("jdbc:mysql://wagnerweinert.com.br:3306/hugo","hugo","1234");
+            PreparedStatement pstm = con.prepareStatement("SELECT * FROM oo_contatos");
+            
+            ResultSet rs = pstm.executeQuery();
+
+            while(rs.next()){
+                int id = rs.getInt("id");
+                String nome = rs.getString("nome");
+                String email = rs.getString("email");
+                String telefone = rs.getString("telefone");
+
+                Contato contato = new Contato(id,nome,email,telefone);
+                
+                lista.add(contato);
+            }
+
+        }catch(SQLException e){
+            System.out.println("Problema ao fazer seleção!! "+e.getMessage());
+        }
+
         return lista;
     }
 
@@ -32,9 +60,25 @@ public class Agenda {
 
             Contato contato = new Contato(nome, telefone, email);
 
-            lista.add(contato);
+            try{
+                Connection con = DriverManager.getConnection("jdbc:mysql://wagnerweinert.com.br:3306/hugo","hugo","1234"); 
+                
+                PreparedStatement pstm = con.prepareStatement("INSERT INTO oo_contatos(nome,email,telefone) VALUES (?,?,?)");
+                
+                pstm.setString(1,contato.getNome());
+                pstm.setString(2,contato.getEmail());
+                pstm.setString(3,contato.getTelefone());
+                //pstm.setInt(3,contato.getTelefone()); //caso o telefone fosse um inteiro
 
-            return "Cadastrado!";
+                pstm.executeUpdate();
+
+                lista.add(contato);
+                return "Cadastrado!";
+            }catch(SQLException e){
+                return "Problema ao conectar "+e.getMessage();
+            }
+            
+
         }else{
             return "Erro! Dados já cadastrados!";
         }
