@@ -1,15 +1,18 @@
 package ifpr.pgua.eic.tads.contatos.controllers;
 
-import ifpr.pgua.eic.tads.contatos.model.Agenda;
+import com.github.hugoperlin.results.Resultado;
+
+import ifpr.pgua.eic.tads.contatos.model.Contato;
+import ifpr.pgua.eic.tads.contatos.model.repositories.ContatoRepository;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 
 public class AddController {
     
-    private Agenda agenda;
+    private ContatoRepository repositorio;
 
-    public AddController(Agenda agenda){
-        this.agenda = agenda;
+    public AddController(ContatoRepository repositorio){
+        this.repositorio = repositorio;
     }
 
     public Handler get = (Context ctx)->{
@@ -21,8 +24,8 @@ public class AddController {
         String email = ctx.formParam("email");
         String telefone = ctx.formParam("telefone");
 
-        String resultado = agenda.cadastrar(nome, email, telefone);
-        System.out.println(agenda.listar());
-        ctx.html(resultado+"<br/><a href=\"/\">Voltar</a>");
+        Resultado<Contato> resultado = repositorio.cadastrar(nome, email, telefone);
+        
+        ctx.html(resultado.getMsg()+"<br/><a href=\"/\">Voltar</a>");
     };
 }

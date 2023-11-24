@@ -6,6 +6,11 @@ import ifpr.pgua.eic.tads.contatos.controllers.IndexController;
 import ifpr.pgua.eic.tads.contatos.controllers.ListController;
 import ifpr.pgua.eic.tads.contatos.controllers.ListTarefaController;
 import ifpr.pgua.eic.tads.contatos.model.Agenda;
+import ifpr.pgua.eic.tads.contatos.model.FabricaConexoes;
+import ifpr.pgua.eic.tads.contatos.model.daos.ContatoDAO;
+import ifpr.pgua.eic.tads.contatos.model.daos.JDBCContatoDAO;
+import ifpr.pgua.eic.tads.contatos.model.repositories.ContatoRepository;
+import ifpr.pgua.eic.tads.contatos.model.repositories.ImplContatoRepository;
 import ifpr.pgua.eic.tads.contatos.utils.JavalinUtils;
 import io.javalin.Javalin;
 
@@ -19,10 +24,15 @@ public class App
     {
         Javalin app = JavalinUtils.makeApp(8080);
         
-        Agenda agenda = new Agenda();
+        ContatoDAO contatoDao = new JDBCContatoDAO(FabricaConexoes.getInstance());
+
+        ContatoRepository contatoRepository = new ImplContatoRepository(contatoDao);
+        
+        Agenda agenda = new Agenda(FabricaConexoes.getInstance(),contatoDao);
+        
         IndexController indexController = new IndexController();
-        AddController addController = new AddController(agenda);
-        ListController listController = new ListController(agenda);
+        AddController addController = new AddController(contatoRepository);
+        ListController listController = new ListController(contatoRepository);
 
         AddTarefaController addTarefaController = new AddTarefaController(agenda);
         ListTarefaController listTarefaController = new ListTarefaController(agenda);

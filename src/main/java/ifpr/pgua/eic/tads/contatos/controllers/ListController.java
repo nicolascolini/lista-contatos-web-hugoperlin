@@ -2,31 +2,38 @@ package ifpr.pgua.eic.tads.contatos.controllers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import ifpr.pgua.eic.tads.contatos.model.Agenda;
+import com.github.hugoperlin.results.Resultado;
+
 import ifpr.pgua.eic.tads.contatos.model.Contato;
+import ifpr.pgua.eic.tads.contatos.model.repositories.ContatoRepository;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 
 public class ListController {
     
-    private Agenda agenda;
+    private ContatoRepository repositorio;
 
-    public ListController(Agenda agenda){
-        this.agenda = agenda;
+    public ListController(ContatoRepository repositorio){
+        this.repositorio = repositorio;
     }
 
     public Handler get = (Context ctx)->{
-        
-        ArrayList<Contato> lista = agenda.getLista();
-        
         String html="<html><head><meta charset=\"UTF-8\"></head><body><h1>Lista de Contatos</h1><ul>";
 
-        for(Contato c:lista){
-            html+="<li>"+c.toString()+"</li>";
+        Resultado<List<Contato>> resultado = repositorio.listarTodos();
+
+        if(resultado.foiErro()){
+            html += "<h1>"+resultado.getMsg()+"</h1>";
+        }else{
+            List<Contato> lista = resultado.comoSucesso().getObj();
+            for(Contato c:lista){
+                html+="<li>"+c.toString()+"</li>";
+            }
         }
-        
+
         html+="</ul><a href=\"/\">Voltar</a></body></html>";
         ctx.html(html);
     };

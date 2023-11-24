@@ -6,21 +6,31 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
+
+import com.github.hugoperlin.results.Resultado;
+
+import ifpr.pgua.eic.tads.contatos.model.daos.ContatoDAO;
 
 public class Agenda {
     private ArrayList<Contato> lista;
 
     private ArrayList<Tarefa> tarefas;
 
-    public Agenda() {
+    private FabricaConexoes fabricaConexao;
+    private ContatoDAO contatoDao;
+
+    public Agenda(FabricaConexoes fabricaConexao, ContatoDAO contatoDao) {
         lista = new ArrayList<>();
         tarefas = new ArrayList<>();
+        this.fabricaConexao = fabricaConexao;
+        this.contatoDao = contatoDao;
     }
 
     public ArrayList<Tarefa> getTarefas() {
         tarefas.clear();
         try {
-            Connection con = DriverManager.getConnection("jdbc:mysql://wagnerweinert.com.br:3306/hugo", "hugo", "1234");
+            Connection con = fabricaConexao.getConnection();
             PreparedStatement pstm = con.prepareStatement("SELECT * FROM oo_tarefas");
 
             ResultSet rs = pstm.executeQuery();
@@ -34,36 +44,15 @@ public class Agenda {
 
                 tarefas.add(tarefa);
             }
+            con.close();
         } catch (SQLException e) {
             System.out.println("Problema ao fazer seleção!! " + e.getMessage());
         }
         return tarefas;
     }
 
-    public ArrayList<Contato> getLista() {
-        lista.clear();
-        try {
-            Connection con = DriverManager.getConnection("jdbc:mysql://wagnerweinert.com.br:3306/hugo", "hugo", "1234");
-            PreparedStatement pstm = con.prepareStatement("SELECT * FROM oo_contatos");
-
-            ResultSet rs = pstm.executeQuery();
-
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String nome = rs.getString("nome");
-                String email = rs.getString("email");
-                String telefone = rs.getString("telefone");
-
-                Contato contato = new Contato(id, nome, email, telefone);
-
-                lista.add(contato);
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Problema ao fazer seleção!! " + e.getMessage());
-        }
-
-        return lista;
+    public Resultado<List<Contato>> getLista() {
+        return contatoDao.listar(); 
     }
 
     public String cadastrarTarefa(String titulo, String descricao) {
@@ -79,7 +68,7 @@ public class Agenda {
         Tarefa tarefa = new Tarefa(titulo, descricao);
 
         try {
-            Connection con = DriverManager.getConnection("jdbc:mysql://wagnerweinert.com.br:3306/hugo", "hugo", "1234");
+            Connection con = fabricaConexao.getConnection();
 
             PreparedStatement pstm = con.prepareStatement("INSERT INTO oo_tarefas(titulo,descricao) VALUES (?,?)");
 
@@ -89,6 +78,7 @@ public class Agenda {
             pstm.executeUpdate();
 
             tarefas.add(tarefa);
+            con.close();
             return "Tarefa cadastrada!";
         } catch (SQLException e) {
             return "Problema ao conectar " + e.getMessage();
@@ -113,25 +103,9 @@ public class Agenda {
 
             Contato contato = new Contato(nome, telefone, email);
 
-            try {
-                Connection con = DriverManager.getConnection("jdbc:mysql://wagnerweinert.com.br:3306/hugo", "hugo",
-                        "1234");
+            Resultado<Contato> resultado = contatoDao.criar(contato);   
 
-                PreparedStatement pstm = con
-                        .prepareStatement("INSERT INTO oo_contatos(nome,email,telefone) VALUES (?,?,?)");
-
-                pstm.setString(1, contato.getNome());
-                pstm.setString(2, contato.getEmail());
-                pstm.setString(3, contato.getTelefone());
-                // pstm.setInt(3,contato.getTelefone()); //caso o telefone fosse um inteiro
-
-                pstm.executeUpdate();
-
-                lista.add(contato);
-                return "Cadastrado!";
-            } catch (SQLException e) {
-                return "Problema ao conectar " + e.getMessage();
-            }
+            return resultado.getMsg();
 
         } else {
             return "Erro! Dados já cadastrados!";
