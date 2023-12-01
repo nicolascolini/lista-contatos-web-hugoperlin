@@ -1,0 +1,5 @@
+Desenvolver um pequeno sistema que permita o registro de pedidos. o sistema deve permitir
+
+1 - cadastrar bebida (id nome valor) ou cadastrar lanche (id nome valor);
+2 - montar um pedido (id, observacao, bebida, lanche)
+3 - listar todos os pedidos
